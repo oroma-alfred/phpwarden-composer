@@ -1,0 +1,5 @@
+/vendor/
+/.venv/
+/composer.lock
+/tests/tmp/
+.DS_Store

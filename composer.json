@@ -1,0 +1,26 @@
+{
+    "name": "phpwarden/phpwarden",
+    "description": "PHP exposure & exploitation guard — scan PHP engine, Composer deps & WordPress against an exploitation-ranked (KEV+EPSS) CVE feed",
+    "type": "library",
+    "license": "Apache-2.0",
+    "keywords": ["security", "vulnerability", "scanner", "cve", "composer", "wordpress", "sca"],
+    "homepage": "https://phpwarden.io",
+    "support": {
+        "issues": "https://github.com/primeagent001-bot/phpwarden/issues",
+        "source": "https://github.com/primeagent001-bot/phpwarden",
+        "docs": "https://phpwarden.io"
+    },
+    "authors": [
+        {
+            "name": "phpwarden",
+            "homepage": "https://phpwarden.io"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "bin": ["bin/phpwarden"],
+    "scripts": {
+        "test": "sh tests/smoke.sh"
+    }
+}

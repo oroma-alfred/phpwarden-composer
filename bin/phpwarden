@@ -1,0 +1,192 @@
+#!/usr/bin/env php
+<?php
+/**
+ * phpwarden Composer shim.
+ *
+ * Runs the phpwarden CLI (a zero-dependency Python 3.8+ program published on
+ * PyPI) from a PHP project's vendor/bin. Resolution order:
+ *
+ *   1. PHPWARDEN_BIN, if set.
+ *   2. A `phpwarden` already on PATH (pipx / pip / distro package).
+ *   3. A private virtualenv created on first run with `python -m venv` and
+ *      `pip install "phpwarden>=2,<3"`, under vendor/phpwarden/.venv, or
+ *      ~/.cache/phpwarden/venv when vendor/ is not writable. Override the
+ *      location with PHPWARDEN_VENV and the pip spec with PHPWARDEN_VERSION.
+ *
+ * All arguments are passed through unchanged and the CLI's exit code is
+ * preserved (0 clean, 1 vulnerable, 2 possibly exposed, 3 version unknown,
+ * 4 input error, 5 report upload failed, 64 usage error). The shim itself
+ * exits 127 when it cannot find or install the CLI.
+ */
+
+const PHPWARDEN_PIP_SPEC = 'phpwarden>=2,<3';
+const PHPWARDEN_SHIM_EXIT = 127;
+
+$isWindows = DIRECTORY_SEPARATOR === '\\';
+// Composer's vendor/bin proxy includes this file; on PHP < 8 it does so through
+// a phpvfscomposer:// stream wrapper, so normalise __FILE__/__DIR__ first.
+$selfFile = preg_replace('#^phpvfscomposer://#', '', __FILE__);
+$selfDir = dirname($selfFile);
+
+function pw_err($msg)
+{
+    fwrite(STDERR, "phpwarden: $msg\n");
+}
+
+/** Run a command with inherited stdio; returns its exit code. */
+function pw_run(array $cmd)
+{
+    $proc = proc_open($cmd, [0 => STDIN, 1 => STDOUT, 2 => STDERR], $pipes);
+    if (!is_resource($proc)) {
+        return PHPWARDEN_SHIM_EXIT;
+    }
+    return proc_close($proc);
+}
+
+/** Run a command silently; returns [exit code, stdout]. */
+function pw_capture(array $cmd)
+{
+    $spec = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $proc = @proc_open($cmd, $spec, $pipes);
+    if (!is_resource($proc)) {
+        return [PHPWARDEN_SHIM_EXIT, ''];
+    }
+    fclose($pipes[0]);
+    $out = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    return [proc_close($proc), (string) $out];
+}
+
+/** Find an existing `phpwarden` on PATH that is not another Composer proxy. */
+function pw_find_on_path($isWindows)
+{
+    $names = $isWindows ? ['phpwarden.exe', 'phpwarden.cmd', 'phpwarden.bat', 'phpwarden'] : ['phpwarden'];
+    $self = realpath($GLOBALS['selfFile']);
+    foreach (explode(PATH_SEPARATOR, (string) getenv('PATH')) as $dir) {
+        if ($dir === '') {
+            continue;
+        }
+        foreach ($names as $name) {
+            $candidate = $dir . DIRECTORY_SEPARATOR . $name;
+            if (!is_file($candidate) || !is_executable($candidate)) {
+                continue;
+            }
+            if (realpath($candidate) === $self) {
+                continue;
+            }
+            // Skip Composer's vendor/bin proxies (PHP scripts), which would recurse.
+            $head = (string) @file_get_contents($candidate, false, null, 0, 200);
+            if (stripos($head, 'php') !== false && strpos($head, 'python') === false) {
+                continue;
+            }
+            return $candidate;
+        }
+    }
+    return null;
+}
+
+/** Locate a Python >= 3.8 interpreter; returns the argv prefix or null. */
+function pw_find_python($isWindows)
+{
+    $candidates = [['python3'], ['python']];
+    if ($isWindows) {
+        array_unshift($candidates, ['py', '-3']);
+    }
+    if ($env = getenv('PHPWARDEN_PYTHON')) {
+        array_unshift($candidates, [$env]);
+    }
+    foreach ($candidates as $py) {
+        list($rc, $out) = pw_capture(array_merge($py, ['-c', 'import sys; print("%d.%d" % sys.version_info[:2])']));
+        if ($rc !== 0) {
+            continue;
+        }
+        $parts = explode('.', trim($out));
+        if (count($parts) === 2 && ((int) $parts[0] > 3 || ((int) $parts[0] === 3 && (int) $parts[1] >= 8))) {
+            return $py;
+        }
+    }
+    return null;
+}
+
+/** Pick the venv directory: PHPWARDEN_VENV, vendor/phpwarden/.venv, or the user cache. */
+function pw_venv_dir($isWindows)
+{
+    if ($env = getenv('PHPWARDEN_VENV')) {
+        return rtrim($env, '/\\');
+    }
+    $vendorNs = dirname($GLOBALS['selfDir'], 2); // vendor/phpwarden
+    if (basename(dirname($vendorNs)) === 'vendor' && is_dir($vendorNs) && is_writable($vendorNs)) {
+        return $vendorNs . DIRECTORY_SEPARATOR . '.venv';
+    }
+    if ($isWindows) {
+        $base = getenv('LOCALAPPDATA') ?: (getenv('USERPROFILE') . '\\AppData\\Local');
+    } else {
+        $base = getenv('XDG_CACHE_HOME') ?: (getenv('HOME') . '/.cache');
+    }
+    return $base . DIRECTORY_SEPARATOR . 'phpwarden' . DIRECTORY_SEPARATOR . 'venv';
+}
+
+function pw_venv_bin($venv, $name, $isWindows)
+{
+    return $isWindows
+        ? $venv . '\\Scripts\\' . $name . '.exe'
+        : $venv . '/bin/' . $name;
+}
+
+/** Ensure the venv exists with phpwarden installed; returns the CLI path or null. */
+function pw_ensure_venv($venv, array $python, $spec, $isWindows)
+{
+    $cli = pw_venv_bin($venv, 'phpwarden', $isWindows);
+    $marker = $venv . DIRECTORY_SEPARATOR . '.phpwarden-spec';
+    if (is_file($cli) && is_file($marker) && trim((string) file_get_contents($marker)) === $spec) {
+        return $cli;
+    }
+    pw_err("installing $spec into $venv (one-time; set PHPWARDEN_VENV to relocate)");
+    if (!is_dir(dirname($venv)) && !@mkdir(dirname($venv), 0777, true)) {
+        pw_err('cannot create ' . dirname($venv));
+        return null;
+    }
+    $rc = pw_run(array_merge($python, ['-m', 'venv', '--clear', $venv]));
+    if ($rc !== 0) {
+        pw_err("`python -m venv` failed (exit $rc); on Debian/Ubuntu try `apt install python3-venv`");
+        return null;
+    }
+    $venvPython = pw_venv_bin($venv, 'python', $isWindows);
+    $rc = pw_run([$venvPython, '-m', 'pip', 'install', '--quiet', '--disable-pip-version-check', $spec]);
+    if ($rc !== 0 || !is_file($cli)) {
+        pw_err("pip install \"$spec\" failed (exit $rc)");
+        return null;
+    }
+    file_put_contents($marker, $spec . "\n");
+    return $cli;
+}
+
+$args = array_slice(isset($_SERVER['argv']) ? $_SERVER['argv'] : $argv, 1);
+
+// 1. Explicit override.
+if ($bin = getenv('PHPWARDEN_BIN')) {
+    exit(pw_run(array_merge([$bin], $args)));
+}
+
+// 2. Already installed (pipx, pip --user, distro package).
+if ($found = pw_find_on_path($isWindows)) {
+    exit(pw_run(array_merge([$found], $args)));
+}
+
+// 3. Private virtualenv.
+$python = pw_find_python($isWindows);
+if ($python === null) {
+    pw_err('no Python 3.8+ found (tried ' . ($isWindows ? 'py -3, ' : '') . 'python3, python).');
+    pw_err('Install Python, or install the CLI directly: `pipx install phpwarden` (https://phpwarden.io).');
+    exit(PHPWARDEN_SHIM_EXIT);
+}
+$spec = getenv('PHPWARDEN_VERSION') ?: PHPWARDEN_PIP_SPEC;
+$cli = pw_ensure_venv(pw_venv_dir($isWindows), $python, $spec, $isWindows);
+if ($cli === null) {
+    pw_err('could not set up a virtualenv; install the CLI directly: `pipx install phpwarden`');
+    pw_err('then run `phpwarden` from PATH or set PHPWARDEN_BIN to its location.');
+    exit(PHPWARDEN_SHIM_EXIT);
+}
+exit(pw_run(array_merge([$cli], $args)));
