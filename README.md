@@ -71,14 +71,14 @@ none is found the shim exits 127 with a message pointing at
 ## Licensing
 
 The scanning engine and the bundled community CVE feed are Apache-2.0, the
-same as the [phpwarden source](https://github.com/primeagent001-bot/phpwarden).
+same as the [phpwarden source](https://github.com/oroma-alfred/phpwarden).
 A [phpwarden.io](https://phpwarden.io) subscription adds the maintained feed
 (fresher advisories, KEV/EPSS refresh, dashboard reporting via `--report-to`).
 
 ## CI
 
 For GitHub Actions use the standalone
-[phpwarden-action](https://github.com/primeagent001-bot/phpwarden-action)
+[phpwarden-action](https://github.com/oroma-alfred/phpwarden-action)
 (on the GitHub Marketplace), which installs the CLI itself and uploads SARIF to code scanning.
 
 ## Development
@@ -87,4 +87,4 @@ For GitHub Actions use the standalone
 sh tests/smoke.sh   # validates composer.json and runs the shim against a vulnerable fixture
 ```
 
-Issues and feature requests: <https://github.com/primeagent001-bot/phpwarden/issues>.
+Issues and feature requests: <https://github.com/oroma-alfred/phpwarden/issues>.

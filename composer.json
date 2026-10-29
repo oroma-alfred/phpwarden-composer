@@ -6,8 +6,8 @@
     "keywords": ["security", "vulnerability", "scanner", "cve", "composer", "wordpress", "sca"],
     "homepage": "https://phpwarden.io",
     "support": {
-        "issues": "https://github.com/primeagent001-bot/phpwarden/issues",
-        "source": "https://github.com/primeagent001-bot/phpwarden",
+        "issues": "https://github.com/oroma-alfred/phpwarden/issues",
+        "source": "https://github.com/oroma-alfred/phpwarden",
         "docs": "https://phpwarden.io"
     },
     "authors": [
