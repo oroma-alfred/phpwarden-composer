@@ -1,9 +1,9 @@
 {
     "name": "phpwarden/phpwarden",
-    "description": "PHP exposure & exploitation guard — scan PHP engine, Composer deps & WordPress against an exploitation-ranked (KEV+EPSS) CVE feed",
+    "description": "Scan composer.lock, WordPress and the PHP engine for vulnerable packages, ranked by real-world exploitation (CISA KEV, then EPSS) — not CVSS. vendor/bin/phpwarden, offline, zero deps.",
     "type": "library",
     "license": "Apache-2.0",
-    "keywords": ["security", "vulnerability", "scanner", "cve", "composer", "wordpress", "sca"],
+    "keywords": ["security", "vulnerability", "scanner", "cve", "composer", "wordpress", "sca", "kev", "epss", "php-security", "supply-chain"],
     "homepage": "https://phpwarden.io",
     "support": {
         "issues": "https://github.com/oroma-alfred/phpwarden/issues",
