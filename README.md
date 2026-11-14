@@ -1,8 +1,8 @@
 # phpwarden for Composer
 
 **PHP vulnerability scanner that ranks findings by real-world exploitation,
-not CVSS.** Of the ~21,100 PHP advisories in the feed, 43 are actually being
-exploited (CISA KEV, as of 2026-11-12); phpwarden puts those first, then sorts
+not CVSS.** Of about 19,500 PHP vulnerabilities in the feed, 54 are known to be
+exploited (CISA KEV, as of 2026-11-14); phpwarden puts those first, then sorts
 by EPSS probability, then CVSS. It scans your `composer.lock`, the PHP engine
 and WordPress installs, straight from `vendor/bin`.
 
@@ -101,8 +101,10 @@ none is found the shim exits 127 with a message pointing at
 
 The scanning engine and the bundled community CVE feed are Apache-2.0, the
 same as the [phpwarden source](https://github.com/oroma-alfred/phpwarden).
-A [phpwarden.io](https://phpwarden.io) subscription adds the maintained feed
-(fresher advisories, KEV/EPSS refresh) and the dashboard behind `--report-to`.
+Free users get weekly feed updates (`phpwarden feed update`, no key) and a
+one-project dashboard behind `--report-to`. Pro and Team at
+[phpwarden.io](https://phpwarden.io) add the maintained feed (rebuilt twice a
+day), more projects and alerts.
 
 ## CI
 
