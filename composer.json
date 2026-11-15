@@ -1,6 +1,6 @@
 {
     "name": "phpwarden/phpwarden",
-    "description": "Scan composer.lock, WordPress and the PHP engine for vulnerable packages, ranked by real-world exploitation (CISA KEV, then EPSS) — not CVSS. vendor/bin/phpwarden, offline, zero deps.",
+    "description": "PHP vulnerability scanner: composer.lock, WordPress (about 12,300 advisories), the PHP engine and your own code, ranked by real-world exploitation (CISA KEV, then EPSS). Offline, Apache-2.0.",
     "type": "library",
     "license": "Apache-2.0",
     "keywords": ["security", "vulnerability", "scanner", "cve", "composer", "wordpress", "sca", "kev", "epss", "php-security", "supply-chain"],
