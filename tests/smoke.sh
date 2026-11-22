@@ -71,4 +71,15 @@ set -e
 grep -q "pipx install phpwarden" "$TMP/err4.txt" || fail "no-python error should point at pipx"
 pass "no Python: exit 127 with pipx hint"
 
+# --- 5. an install made by an older shim (older spec) is upgraded ------------
+printf 'phpwarden>=2,<3\n' > "$PHPWARDEN_VENV/.phpwarden-spec"
+set +e
+PATH="$LEAN_PATH" "$PHP" "$SHIM" --version >"$TMP/out5.txt" 2>"$TMP/err5.txt"; RC=$?
+set -e
+[ "$RC" -eq 0 ] || { cat "$TMP/err5.txt" >&2; fail "upgrade run: expected exit 0, got $RC"; }
+grep -q "installing phpwarden>=2.5.2" "$TMP/err5.txt" || { cat "$TMP/err5.txt" >&2; fail "an older spec should trigger a reinstall"; }
+"$PHP" -r 'preg_match("/phpwarden (\d+)\.(\d+)\.(\d+)/", file_get_contents($argv[1]), $m) || exit(1); exit(version_compare("$m[1].$m[2].$m[3]", "2.5.2", ">=") ? 0 : 1);' "$TMP/out5.txt" \
+    || { cat "$TMP/out5.txt" >&2; fail "after the upgrade the CLI should be at least 2.5.2"; }
+pass "older install: rebuilt and upgraded to >= 2.5.2"
+
 echo "all smoke tests passed"

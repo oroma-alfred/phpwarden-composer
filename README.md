@@ -89,9 +89,13 @@ Exit `1` means any known-vulnerable package; the CLI has no severity threshold
 2. A `phpwarden` already on `PATH`.
 3. A virtualenv under `vendor/phpwarden/.venv` (or `~/.cache/phpwarden/venv`
    when `vendor/` is not writable), created with `python -m venv` and
-   `pip install "phpwarden>=2,<3"`. Override the location with
+   `pip install "phpwarden>=2.5.2,<3"`. Override the location with
    `PHPWARDEN_VENV`, the pip spec with `PHPWARDEN_VERSION`, and the
    interpreter with `PHPWARDEN_PYTHON`.
+
+   Each shim release raises the minimum version when the CLI gains something
+   important. A changed spec rebuilds the virtualenv, so `composer update`
+   brings an existing install up to date; you never need to delete `.venv`.
 
 Python is looked up as `python3`, then `python` (and `py -3` on Windows). If
 none is found the shim exits 127 with a message pointing at

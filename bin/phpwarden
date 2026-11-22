@@ -9,9 +9,12 @@
  *   1. PHPWARDEN_BIN, if set.
  *   2. A `phpwarden` already on PATH (pipx / pip / distro package).
  *   3. A private virtualenv created on first run with `python -m venv` and
- *      `pip install "phpwarden>=2,<3"`, under vendor/phpwarden/.venv, or
+ *      `pip install "phpwarden>=2.5.2,<3"`, under vendor/phpwarden/.venv, or
  *      ~/.cache/phpwarden/venv when vendor/ is not writable. Override the
  *      location with PHPWARDEN_VENV and the pip spec with PHPWARDEN_VERSION.
+ *
+ *      The minimum version is raised in shim releases that matter: a changed spec
+ *      rebuilds the venv, so `composer update` brings existing installs up to date.
  *
  * All arguments are passed through unchanged and the CLI's exit code is
  * preserved (0 clean, 1 vulnerable, 2 possibly exposed, 3 version unknown,
@@ -19,7 +22,7 @@
  * exits 127 when it cannot find or install the CLI.
  */
 
-const PHPWARDEN_PIP_SPEC = 'phpwarden>=2,<3';
+const PHPWARDEN_PIP_SPEC = 'phpwarden>=2.5.2,<3';
 const PHPWARDEN_SHIM_EXIT = 127;
 
 $isWindows = DIRECTORY_SEPARATOR === '\\';
