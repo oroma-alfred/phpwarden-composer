@@ -1,5 +1,7 @@
 # phpwarden for Composer
 
+**Website and docs: [phpwarden.io](https://phpwarden.io)**
+
 **PHP vulnerability scanner that ranks findings by real-world exploitation,
 not CVSS.** Of about 19,500 PHP vulnerabilities in the feed, 54 are known to be
 exploited (CISA KEV, as of 2026-11-14); phpwarden puts those first, then sorts
