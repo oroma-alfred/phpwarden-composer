@@ -91,7 +91,7 @@ Exit `1` means any known-vulnerable package; the CLI has no severity threshold
 2. A `phpwarden` already on `PATH`.
 3. A virtualenv under `vendor/phpwarden/.venv` (or `~/.cache/phpwarden/venv`
    when `vendor/` is not writable), created with `python -m venv` and
-   `pip install "phpwarden>=2.5.2,<3"`. Override the location with
+   `pip install "phpwarden>=2.6.0,<3"`. Override the location with
    `PHPWARDEN_VENV`, the pip spec with `PHPWARDEN_VERSION`, and the
    interpreter with `PHPWARDEN_PYTHON`.
 

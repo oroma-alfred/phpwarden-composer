@@ -9,7 +9,7 @@
  *   1. PHPWARDEN_BIN, if set.
  *   2. A `phpwarden` already on PATH (pipx / pip / distro package).
  *   3. A private virtualenv created on first run with `python -m venv` and
- *      `pip install "phpwarden>=2.5.2,<3"`, under vendor/phpwarden/.venv, or
+ *      `pip install "phpwarden>=2.6.0,<3"`, under vendor/phpwarden/.venv, or
  *      ~/.cache/phpwarden/venv when vendor/ is not writable. Override the
  *      location with PHPWARDEN_VENV and the pip spec with PHPWARDEN_VERSION.
  *
@@ -22,7 +22,7 @@
  * exits 127 when it cannot find or install the CLI.
  */
 
-const PHPWARDEN_PIP_SPEC = 'phpwarden>=2.5.2,<3';
+const PHPWARDEN_PIP_SPEC = 'phpwarden>=2.6.0,<3';
 const PHPWARDEN_SHIM_EXIT = 127;
 
 $isWindows = DIRECTORY_SEPARATOR === '\\';
